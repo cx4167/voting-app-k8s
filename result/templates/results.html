@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voting Results</title>
+    <style>
+        body { font-family: Arial; margin: 50px; }
+        table { border-collapse: collapse; width: 50%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Voting Results</h1>
+    <table>
+        <tr>
+            <th>Option</th>
+            <th>Votes</th>
+        </tr>
+        {% for option, count in results.items() %}
+        <tr>
+            <td>{{ option }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p><a href="/">Vote Again</a></p>
+</body>
+</html>

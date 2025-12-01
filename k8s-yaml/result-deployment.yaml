@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: result
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: result
+  template:
+    metadata:
+      labels:
+        app: result
+    spec:
+      containers:
+      - name: result
+        image: denish952/voting-app-result:v1
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: voting-config
+        - secretRef:
+            name: voting-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: result-service
+spec:
+  selector:
+    app: result
+  ports:
+  - port: 80
+    targetPort: 80
+  type: NodePort
