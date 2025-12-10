@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: vote
-        image: denish952/voting-app-vote:v1
+        image: denish952/voting-app-vote:v2
         ports:
         - containerPort: 80
         envFrom:
