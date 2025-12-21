@@ -30,6 +30,31 @@ sudo mv kubectl /usr/local/bin/kubectl
 ```
 
 # Verify installation
+```
 kubectl version --client
+```
 
-# Should show: version.Info{...}
+#jenkins container 
+```
+FROM jenkins/jenkins:lts
+
+USER root
+
+# Install Docker CLI (static)
+RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-26.1.3.tgz -o docker.tgz \
+ && tar -xzf docker.tgz \
+ && mv docker/docker /usr/local/bin/docker \
+ && chmod +x /usr/local/bin/docker \
+ && rm -rf docker docker.tgz
+
+# Install kubectl (fetch stable release then download)
+RUN set -eux; \
+    KUBECTL_VERSION="$(curl -fsSL https://dl.k8s.io/release/stable.txt)"; \
+    curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl; \
+    chmod +x /usr/local/bin/kubectl
+
+# Install Helm
+RUN curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+USER jenkins
+```
