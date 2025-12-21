@@ -58,3 +58,23 @@ RUN curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm
 
 USER jenkins
 ```
+
+```
+services:
+  jenkins:
+    build: .
+    image: jenkins-ci-cd
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - /opt/jenkins:/var/jenkins_home
+      - /opt/jenkins/.kube:/var/jenkins_home/.kube
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - "JAVA_OPTS=-Xmx512m -Xms256m"
+      - KUBECONFIG=/var/jenkins_home/.kube/config
+    restart: unless-stopped
+    user: root
+```
