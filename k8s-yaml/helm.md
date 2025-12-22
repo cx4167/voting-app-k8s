@@ -19,7 +19,7 @@ output
 helm reop update
 ```
 
-#install helm 
+#install prometheus 
 ```
 helm install prometheus prometheus-community/prometheus \
   --version 15.18.0
@@ -157,3 +157,71 @@ kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-passwor
 [root@master ~]# kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 P4UfWM3ASP2WH1LJZralJAUns4QFW16kD3PMBut3
 ```
+also expose prometheus-kube-state-metrics
+```
+[root@master ~]# kubectl expose service prometheus-kube-state-metrics --type=NodePort --target-port=8080 --name=prometheus-kube-state-metrics-ext
+service/prometheus-kube-state-metrics-ext exposed
+[root@master ~]# kubectl get svc
+NAME                                TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+grafana                             ClusterIP   10.104.172.23    <none>        80/TCP           28m
+grafana-ext                         NodePort    10.104.64.184    <none>        80:30361/TCP     19m
+kubernetes                          ClusterIP   10.96.0.1        <none>        443/TCP          20d
+prometheus-alertmanager             ClusterIP   10.97.199.174    <none>        80/TCP           50m
+prometheus-kube-state-metrics       ClusterIP   10.102.39.201    <none>        8080/TCP         50m
+prometheus-kube-state-metrics-ext   NodePort    10.106.237.129   <none>        8080:32647/TCP   20s
+prometheus-node-exporter            ClusterIP   10.100.190.144   <none>        9100/TCP         50m
+prometheus-pushgateway              ClusterIP   10.105.32.155    <none>        9091/TCP         50m
+prometheus-server                   ClusterIP   10.110.66.193    <none>        80/TCP           50m
+prometheus-server-ext               NodePort    10.96.217.69     <none>        80:30921/TCP     38m
+[root@master ~]#
+```
+
+
+to see inside pometheus 
+ ```
+[root@master ~]# kubectl get cm
+NAME                      DATA   AGE
+grafana                   1      34m
+kube-root-ca.crt          1      20d
+prometheus-alertmanager   2      57m
+prometheus-server         6      57m
+[root@master ~]#
+[root@master ~]# kubectl edit cm prometheus-server
+
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+data:
+  alerting_rules.yml: |
+    {}
+  alerts: |
+    {}
+  allow-snippet-annotations: "false"
+  prometheus.yml: |
+    global:
+      evaluation_interval: 1m
+      scrape_interval: 1m
+      scrape_timeout: 10s
+    rule_files:
+    - /etc/config/recording_rules.yml
+    - /etc/config/alerting_rules.yml
+    - /etc/config/rules
+    - /etc/config/alerts
+    scrape_configs:
+    - job_name: prometheus
+      static_configs:
+      - targets:
+        - localhost:9090
+    - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      job_name: kubernetes-apiservers
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - action: keep
+        regex: default;kubernetes;https
+        source_labels:
+
+```
+
