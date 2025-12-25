@@ -3,26 +3,111 @@
 <head>
     <title>Voting Results</title>
     <style>
-        body { font-family: Arial; margin: 50px; }
-        table { border-collapse: collapse; width: 50%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --table-border: #404040;
+            --table-hover: #3a3a3a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 50px;
+            min-height: 100vh;
+            transition: background-color 0.3s ease;
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--bg-secondary);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        th {
+            background-color: var(--accent);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid var(--accent);
+        }
+
+        td {
+            border: 1px solid var(--table-border);
+            padding: 12px;
+            text-align: left;
+            color: var(--text-primary);
+        }
+
+        tr:hover {
+            background-color: var(--table-hover);
+            transition: background-color 0.3s ease;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.3s ease;
+            padding-bottom: 2px;
+            font-weight: 600;
+        }
+
+        a:hover {
+            border-bottom-color: var(--accent);
+        }
     </style>
 </head>
 <body>
-    <h1>Voting Results</h1>
-    <table>
-        <tr>
-            <th>Option</th>
-            <th>Votes</th>
-        </tr>
-        {% for option, count in results.items() %}
-        <tr>
-            <td>{{ option }}</td>
-            <td>{{ count }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <p><a href="/">Vote Again</a></p>
+    <div class="container">
+        <h1>Voting Results</h1>
+        <table>
+            <tr>
+                <th>Option</th>
+                <th>Votes</th>
+            </tr>
+            {% for option, count in results.items() %}
+            <tr>
+                <td>{{ option }}</td>
+                <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <p><a href="/">Vote Again</a></p>
+    </div>
 </body>
 </html>
