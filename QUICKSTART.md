@@ -7,33 +7,39 @@
 
 ## Running Locally with Docker Compose
 
-### 1. Start all services
+### 1. Clean start (recommended)
 ```bash
+# Remove old containers and volumes
+docker-compose -f docker-compose.prod.yml down -v
+
+# Build fresh images
 docker-compose -f docker-compose.prod.yml up --build
 ```
 
 ### 2. Access the applications
-- **Voting App**: http://localhost:5000
-- **Results Dashboard**: http://localhost:5001
+- **Voting App**: http://localhost:5000/login
+- **Results Dashboard**: http://localhost:5001/results
 
 ### 3. Default Login Credentials
-Run the setup script first to create users:
-```bash
-docker-compose -f docker-compose.prod.yml exec vote python setup_users.py
-```
-
-Or use pre-configured users:
+The database is automatically initialized with these users:
 - Username: `admin` | Password: `admin123`
 - Username: `bob` | Password: `secure456`
 - Username: `charlie` | Password: `voting789`
 - Username: `diana` | Password: `choices123`
 
-### 4. Stop all services
+### 4. Test the application
+1. Open http://localhost:5000/login
+2. Login with `admin` / `admin123`
+3. Vote for cats or dogs
+4. View results at http://localhost:5001/results
+5. Logout to go back to login page
+
+### 5. Stop all services
 ```bash
 docker-compose -f docker-compose.prod.yml down
 ```
 
-### 5. Clean up volumes (fresh start)
+### 6. Clean up volumes (fresh start)
 ```bash
 docker-compose -f docker-compose.prod.yml down -v
 ```
@@ -67,6 +73,21 @@ docker-compose -f docker-compose.prod.yml logs -f
 docker-compose -f docker-compose.prod.yml logs -f vote
 docker-compose -f docker-compose.prod.yml logs -f worker
 docker-compose -f docker-compose.prod.yml logs -f result
+docker-compose -f docker-compose.prod.yml logs -f db
+```
+
+### Login not working
+1. Check vote service logs: `docker-compose -f docker-compose.prod.yml logs -f vote`
+2. Verify database exists: `docker-compose -f docker-compose.prod.yml exec vote ls -la /app/data/`
+3. Clean restart: `docker-compose -f docker-compose.prod.yml down -v && docker-compose -f docker-compose.prod.yml up --build`
+
+### Database issues
+```bash
+# Check if database exists
+docker-compose -f docker-compose.prod.yml exec vote sqlite3 /app/data/users.db ".tables"
+
+# List users
+docker-compose -f docker-compose.prod.yml exec vote sqlite3 /app/data/users.db "SELECT username FROM users;"
 ```
 
 ### Container health check
@@ -105,6 +126,9 @@ POSTGRES_PASSWORD: your-strong-password
 ### Deploy to Kubernetes
 See `PRODUCTION_DEPLOYMENT.md` for detailed Kubernetes deployment instructions.
 
+### Deploy with Jenkins
+See `JENKINS_K8S_DEPLOYMENT.md` for Jenkins CI/CD pipeline setup.
+
 ### Monitor & Logging
 - Set up Prometheus + Grafana for monitoring
 - Configure ELK stack for centralized logging
@@ -115,3 +139,4 @@ See `PRODUCTION_DEPLOYMENT.md` for detailed Kubernetes deployment instructions.
 - Set up HTTPS/TLS certificates
 - Configure network policies
 - Enable Pod Security Policies
+

@@ -20,7 +20,13 @@ redis_port = int(os.environ.get('REDIS_PORT', 6379))
 redis = Redis(host=redis_host, port=redis_port, decode_responses=True)
 
 # Initialize SQLite database for users
-DATABASE = os.environ.get('DATABASE_PATH', 'users.db')
+DATABASE = os.environ.get('DATABASE_PATH', '/app/data/users.db')
+
+def ensure_db_dir():
+    """Ensure database directory exists."""
+    db_dir = os.path.dirname(DATABASE)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir, exist_ok=True)
 
 def get_db():
     db = sqlite3.connect(DATABASE)
@@ -28,8 +34,17 @@ def get_db():
     return db
 
 def init_db():
-    if not os.path.exists(DATABASE):
-        db = get_db()
+    """Initialize database with tables and default users."""
+    ensure_db_dir()
+    
+    # Only create if doesn't exist
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+    table_exists = cursor.fetchone()
+    
+    if not table_exists:
+        print("📊 Creating users table...")
         db.execute('''
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +55,30 @@ def init_db():
             )
         ''')
         db.commit()
-        db.close()
+        
+        # Add default users
+        default_users = [
+            ('admin', 'admin123'),
+            ('bob', 'secure456'),
+            ('charlie', 'voting789'),
+            ('diana', 'choices123'),
+        ]
+        
+        for username, password in default_users:
+            try:
+                hashed_password = generate_password_hash(password)
+                db.execute(
+                    'INSERT INTO users (username, password, has_voted) VALUES (?, ?, 0)',
+                    (username, hashed_password)
+                )
+                print(f"✅ User '{username}' created")
+            except sqlite3.IntegrityError:
+                pass
+        
+        db.commit()
+        print("✅ Database initialized with default users")
+    
+    db.close()
 
 def login_required(f):
     @wraps(f)
@@ -49,6 +87,13 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+@app.before_request
+def before_request():
+    """Initialize database before first request."""
+    if not hasattr(app, 'db_initialized'):
+        init_db()
+        app.db_initialized = True
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
