@@ -9,10 +9,11 @@ from functools import wraps
 
 app = Flask(__name__)
 # Use environment variable for production secret key
-app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP in dev/k8s
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_NAME'] = 'voting_session'
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
 redis_host = os.environ.get('REDIS_HOST', 'redis')
@@ -125,6 +126,8 @@ def login():
             session.permanent = True
             session['user_id'] = user['id']
             session['username'] = user['username']
+            print(f"✅ Login successful for user: {username}, user_id: {user['id']}")
+            print(f"   Session data: user_id={session.get('user_id')}, username={session.get('username')}")
             return redirect(url_for('vote'))
         
         return render_template('login.html', error=error)
