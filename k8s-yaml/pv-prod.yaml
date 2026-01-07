@@ -16,6 +16,6 @@ spec:
     - ReadWriteOnce
   storageClassName: standard
   hostPath:
-    path: /data/voting
+    path: /tmp/voting-data
     type: DirectoryOrCreate
   persistentVolumeReclaimPolicy: Retain
