@@ -1,2 +1,5 @@
 Flask
 redis
+sqlite3
+werkzeug
+flask-session
