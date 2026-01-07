@@ -84,11 +84,8 @@ spec:
           subPath: postgres
         
         securityContext:
-          allowPrivilegeEscalation: false
+          allowPrivilegeEscalation: true
           readOnlyRootFilesystem: false
-          capabilities:
-            drop:
-            - ALL
   
   volumeClaimTemplates:
   - metadata:
