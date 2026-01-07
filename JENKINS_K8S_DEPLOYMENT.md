@@ -17,13 +17,18 @@ This guide covers both approaches.
 - Docker CLI installed on Jenkins agent
 - Docker Hub account with credentials configured
 - kubectl installed on Jenkins agent
-- Kubeconfig file configured
+- Kubeconfig file configured at `/var/jenkins_home/.kube/config`
 
 ### For Kubernetes
 - Kubernetes cluster (local minikube, EKS, AKS, GKE, etc.)
-- kubectl CLI installed
+- kubectl CLI installed and configured
 - Docker images available (Docker Hub or private registry)
 - Persistent storage configured (for database)
+
+### Known Issues Fixed ✅
+- ✅ Kubernetes manifests no longer have hardcoded namespaces (use `-n` flag instead)
+- ✅ All `-prod` manifests are now namespace-agnostic
+- ✅ Jenkins can deploy to any namespace (DEV, PROD, or custom)
 
 ---
 

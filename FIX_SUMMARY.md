@@ -28,7 +28,7 @@ Removed `sqlite3` from `vote/requirements.txt`.
 
 ---
 
-## 🔴 Issue #3: PostgreSQL Password Mismatch ⭐ NEW
+## 🔴 Issue #3: PostgreSQL Password Mismatch
 Error during runtime:
 ```
 psycopg2.OperationalError: FATAL: password authentication failed for user "postgres"
@@ -57,14 +57,87 @@ Same approach - reads from environment variables.
 
 ---
 
+## 🔴 Issue #4: Jenkins Pipeline Namespace Conflicts ⭐ NEW
+Error during Jenkins deployment:
+```
+the namespace from the provided object "voting-app-prod" does not match the namespace "voting-app-dev". 
+You must pass '--namespace=voting-app-prod' to perform this operation.
+```
+
+### Root Cause
+The Kubernetes manifests had **hardcoded namespaces**:
+- `k8s-yaml/configmap-prod.yaml` → `namespace: voting-app-prod`
+- `k8s-yaml/db-statefulset-prod.yaml` → `namespace: voting-app-prod`
+- `k8s-yaml/vote-deployment-prod.yaml` → `namespace: voting-app-prod`
+
+The Jenkins pipeline was trying to deploy these manifests to `voting-app-dev` namespace using `-n voting-app-dev` flag, which conflicts with the hardcoded namespace.
+
+### Solution
+Removed **all hardcoded namespace declarations** from Kubernetes manifests:
+
+**Before (WRONG):**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote
+  namespace: voting-app-prod  # ← Hardcoded!
+```
+
+**After (CORRECT):**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote
+  # ← No namespace, let kubectl -n flag handle it
+```
+
+**Files Updated:**
+- ✅ `configmap-prod.yaml` - Removed from ConfigMap & Secret
+- ✅ `db-statefulset-prod.yaml` - Removed from StatefulSet & Service
+- ✅ `vote-deployment-prod.yaml` - Removed from Deployment & Service
+
+Now the kubectl command controls the namespace:
+```bash
+kubectl apply -f k8s-yaml/ -n voting-app-dev   # Deploys to DEV
+kubectl apply -f k8s-yaml/ -n voting-app-prod  # Deploys to PROD
+```
+
+---
+
 ## ✅ Now Ready to Run
 
+### Docker Compose
 ```bash
 docker-compose -f docker-compose.prod.yml up --build
 ```
+✅ Vote service works
+✅ Result service connects to database
+✅ Worker processes votes
 
-The vote service will work ✅
-The result service will connect to database ✅
-The worker will process votes ✅
+### Jenkins Pipeline
+```bash
+# Jenkins will automatically:
+# 1. Build Docker images
+# 2. Push to Docker Hub
+# 3. Update manifests with new image tags
+# 4. Deploy to voting-app-dev namespace
+# 5. Wait for approval
+# 6. Deploy to voting-app-prod namespace
+```
+
+### Manual Kubernetes
+```bash
+# Deploy to DEV
+kubectl create namespace voting-app-dev
+kubectl apply -f k8s-yaml/ -n voting-app-dev
+
+# Deploy to PROD
+kubectl create namespace voting-app-prod
+kubectl apply -f k8s-yaml/ -n voting-app-prod
+```
+
+
 
 
