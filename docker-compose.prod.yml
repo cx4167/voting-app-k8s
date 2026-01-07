@@ -1,10 +1,8 @@
-version: '3.9'
-
 services:
   vote:
     build:
-      context: .
-      dockerfile: vote/Dockerfile
+      context: ./vote
+      dockerfile: Dockerfile
     container_name: voting-app-vote
     ports:
       - "5000:80"
@@ -48,8 +46,8 @@ services:
 
   worker:
     build:
-      context: .
-      dockerfile: worker/Dockerfile
+      context: ./worker
+      dockerfile: Dockerfile
     container_name: voting-app-worker
     depends_on:
       redis:
@@ -89,8 +87,8 @@ services:
 
   result:
     build:
-      context: .
-      dockerfile: result/Dockerfile
+      context: ./result
+      dockerfile: Dockerfile
     container_name: voting-app-result
     ports:
       - "5001:80"

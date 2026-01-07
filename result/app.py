@@ -1,8 +1,16 @@
 from flask import Flask, render_template
 import psycopg2
+import os
 
 app = Flask(__name__)
-db_conn = psycopg2.connect("dbname=voting_db user=postgres password=password host=db")
+
+# Get database connection parameters from environment variables
+db_host = os.environ.get('POSTGRES_HOST', 'db')
+db_user = os.environ.get('POSTGRES_USER', 'postgres')
+db_password = os.environ.get('POSTGRES_PASSWORD', 'password')
+db_name = os.environ.get('POSTGRES_DB', 'voting_db')
+
+db_conn = psycopg2.connect(f"dbname={db_name} user={db_user} password={db_password} host={db_host}")
 cursor = db_conn.cursor()
 
 @app.route('/results')
