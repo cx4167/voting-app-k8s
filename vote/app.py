@@ -62,14 +62,18 @@ def login():
             error = 'Username and password are required.'
         
         if error is None:
-            db = get_db()
-            user = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
-            db.close()
-            
-            if user is None:
-                error = 'Invalid credentials.'
-            elif not check_password_hash(user['password'], password):
-                error = 'Invalid credentials.'
+            try:
+                db = get_db()
+                user = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+                db.close()
+                
+                if user is None:
+                    error = 'Invalid credentials.'
+                elif not check_password_hash(user['password'], password):
+                    error = 'Invalid credentials.'
+            except Exception as e:
+                print(f"Login error: {str(e)}")
+                error = f'Database error: {str(e)}'
         
         if error is None:
             session.clear()

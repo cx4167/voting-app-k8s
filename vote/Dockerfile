@@ -24,5 +24,8 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost/login', timeout=5)" || exit 1
 
+# Initialize database on container start
+RUN mkdir -p /app/data
+
 # Run with gunicorn for production
-CMD ["gunicorn", "--bind", "0.0.0.0:80", "--workers", "4", "--timeout", "30", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
+CMD python check_db.py && gunicorn --bind 0.0.0.0:80 --workers 4 --timeout 30 --access-logfile - --error-logfile - app:app
