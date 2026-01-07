@@ -57,7 +57,7 @@ Same approach - reads from environment variables.
 
 ---
 
-## 🔴 Issue #4: Jenkins Pipeline Namespace Conflicts ⭐ NEW
+## 🔴 Issue #4: Jenkins Pipeline Namespace Conflicts
 Error during Jenkins deployment:
 ```
 the namespace from the provided object "voting-app-prod" does not match the namespace "voting-app-dev". 
@@ -73,36 +73,34 @@ The Kubernetes manifests had **hardcoded namespaces**:
 The Jenkins pipeline was trying to deploy these manifests to `voting-app-dev` namespace using `-n voting-app-dev` flag, which conflicts with the hardcoded namespace.
 
 ### Solution
-Removed **all hardcoded namespace declarations** from Kubernetes manifests:
-
-**Before (WRONG):**
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: vote
-  namespace: voting-app-prod  # ← Hardcoded!
-```
-
-**After (CORRECT):**
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: vote
-  # ← No namespace, let kubectl -n flag handle it
-```
+Removed **all hardcoded namespace declarations** from Kubernetes manifests.
 
 **Files Updated:**
 - ✅ `configmap-prod.yaml` - Removed from ConfigMap & Secret
 - ✅ `db-statefulset-prod.yaml` - Removed from StatefulSet & Service
 - ✅ `vote-deployment-prod.yaml` - Removed from Deployment & Service
 
-Now the kubectl command controls the namespace:
-```bash
-kubectl apply -f k8s-yaml/ -n voting-app-dev   # Deploys to DEV
-kubectl apply -f k8s-yaml/ -n voting-app-prod  # Deploys to PROD
+---
+
+## 🔴 Issue #5: Conflicting Kubernetes Service Definitions ⭐ NEW
+Error during deployment:
 ```
+The Service "db" is invalid: spec.clusterIPs[0]: Invalid value: []string{"None"}: may not change once set
+```
+
+### Root Cause
+Two conflicting database definitions in the manifest files:
+
+1. **db-deployment.yaml** (Deployment) - Regular ClusterIP Service
+2. **db-statefulset-prod.yaml** (StatefulSet) - Headless Service (clusterIP: None)
+
+Both tried to create a Service named `db`. Kubernetes won't let you change the clusterIP after it's set, so they conflicted.
+
+### Solution
+Removed the old `db-deployment.yaml` and kept only `db-statefulset-prod.yaml`:
+- ✅ Backed up `db-deployment.yaml` → `db-deployment.yaml.bak`
+- ✅ Keep only the production-ready StatefulSet definition
+- ✅ StatefulSet provides better persistence and ordering guarantees
 
 ---
 
@@ -137,6 +135,8 @@ kubectl apply -f k8s-yaml/ -n voting-app-dev
 kubectl create namespace voting-app-prod
 kubectl apply -f k8s-yaml/ -n voting-app-prod
 ```
+
+
 
 
 
