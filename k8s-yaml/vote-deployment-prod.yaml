@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote
+  namespace: voting-app-prod
+  labels:
+    app: vote
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: vote
+  template:
+    metadata:
+      labels:
+        app: vote
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: vote
+        image: denish952/voting-app-vote:latest
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - containerPort: 80
+          name: http
+        
+        env:
+        - name: FLASK_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: voting-config-prod
+              key: FLASK_ENV
+        
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: voting-secrets-prod
+              key: SECRET_KEY
+        
+        - name: DATABASE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: voting-config-prod
+              key: DATABASE_PATH
+        
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: voting-config-prod
+              key: REDIS_HOST
+        
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: voting-config-prod
+              key: REDIS_PORT
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 2
+        
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      
+      volumes:
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: voting-data-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vote-service
+  namespace: voting-app-prod
+  labels:
+    app: vote
+spec:
+  selector:
+    app: vote
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  type: LoadBalancer
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600

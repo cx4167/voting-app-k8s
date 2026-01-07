@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: voting-config-prod
+  namespace: voting-app-prod
+data:
+  # Flask Configuration
+  FLASK_ENV: "production"
+  
+  # Database Configuration
+  DATABASE_PATH: "/app/data/users.db"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  
+  # PostgreSQL Configuration
+  POSTGRES_HOST: "db"
+  POSTGRES_USER: "postgres"
+  POSTGRES_DB: "voting_db"
+  
+  # Security Settings
+  SESSION_TIMEOUT: "3600"
+  LOG_LEVEL: "INFO"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: voting-secrets-prod
+  namespace: voting-app-prod
+type: Opaque
+stringData:
+  SECRET_KEY: "change-me-to-a-strong-random-key-min-32-chars"
+  POSTGRES_PASSWORD: "change-me-to-a-strong-password"
+  DOCKER_REGISTRY_PASSWORD: "your-docker-hub-token"

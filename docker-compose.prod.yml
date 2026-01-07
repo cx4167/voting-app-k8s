@@ -1,0 +1,123 @@
+version: '3.9'
+
+services:
+  vote:
+    build:
+      context: .
+      dockerfile: vote/Dockerfile
+    container_name: voting-app-vote
+    ports:
+      - "5000:80"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - voting-net
+    environment:
+      FLASK_ENV: production
+      SECRET_KEY: dev-secret-key-change-in-production-12345678
+      DATABASE_PATH: /app/data/users.db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - vote-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost/login', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: voting-app-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - voting-net
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    container_name: voting-app-worker
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - voting-net
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGRES_HOST: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: voting-password
+      POSTGRES_DB: voting_db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: voting-app-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: voting-password
+      POSTGRES_DB: voting_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - voting-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  result:
+    build:
+      context: .
+      dockerfile: result/Dockerfile
+    container_name: voting-app-result
+    ports:
+      - "5001:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - voting-net
+    environment:
+      FLASK_ENV: production
+      POSTGRES_HOST: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: voting-password
+      POSTGRES_DB: voting_db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost/results', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  voting-net:
+    driver: bridge
+
+volumes:
+  vote-data:
+  redis-data:
+  postgres-data:

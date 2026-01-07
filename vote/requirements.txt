@@ -3,3 +3,5 @@ redis
 sqlite3
 werkzeug
 flask-session
+gunicorn
+requests
