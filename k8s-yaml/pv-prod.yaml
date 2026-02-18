@@ -7,7 +7,7 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
-  storageClassName: standard
+  storageClassName:
   hostPath:
     path: /var/lib/voting
     type: DirectoryOrCreate
