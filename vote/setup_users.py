@@ -72,6 +72,9 @@ if __name__ == '__main__':
     add_user('bob', 'secure456')
     add_user('charlie', 'voting789')
     add_user('diana', 'choices123')
+    add_user('denish', '1')
+    
+    
     
     # List all users
     list_users()
