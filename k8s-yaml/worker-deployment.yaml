@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker
+  namespace: voting-app-dev
 spec:
   replicas: 1
   selector:
@@ -14,9 +15,18 @@ spec:
     spec:
       containers:
       - name: worker
-        image: denish952/voting-app-worker:v2
+        image: denish952/voting-app-worker:39
+        
         envFrom:
         - configMapRef:
             name: voting-config-prod
         - secretRef:
-            name: voting-secret-prod
+            name: voting-secrets-prod
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
