@@ -17,6 +17,6 @@ spec:
         image: denish952/voting-app-worker:v2
         envFrom:
         - configMapRef:
-            name: voting-config
+            name: voting-config-prod
         - secretRef:
-            name: voting-secret
+            name: voting-secret-prod

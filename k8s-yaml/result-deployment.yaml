@@ -19,9 +19,9 @@ spec:
         - containerPort: 80
         envFrom:
         - configMapRef:
-            name: voting-config
+            name: voting-config-prod
         - secretRef:
-            name: voting-secret
+            name: voting-secret-prod
 ---
 apiVersion: v1
 kind: Service
