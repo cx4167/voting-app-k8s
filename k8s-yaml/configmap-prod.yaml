@@ -12,7 +12,3 @@ data:
   POSTGRES_USER: postgres
   POSTGRES_HOST: db
   POSTGRES_PORT: '5432'
-stringData:
-  SECRET_KEY: change-me-to-a-strong-random-key-min-32-chars
-  POSTGRES_PASSWORD: change-me-to-a-strong-password
-  DOCKER_REGISTRY_PASSWORD: your-docker-hub-token
